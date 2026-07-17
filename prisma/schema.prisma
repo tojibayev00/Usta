@@ -1,0 +1,194 @@
+// ============================================================
+// USTATOP — Prisma Schema
+// ------------------------------------------------------------
+// PostgreSQL uchun to'liq ma'lumotlar bazasi sxemasi.
+// `npx prisma migrate dev` orqali migratsiya yaratiladi.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------
+// Foydalanuvchi (mijoz) — Telegram orqali autentifikatsiya qilinadi
+// ------------------------------------------------------------
+model User {
+  id            String   @id @default(uuid())
+  telegramId    BigInt   @unique @map("telegram_id")
+  firstName     String   @map("first_name")
+  lastName      String?  @map("last_name")
+  username      String?
+  photoUrl      String?  @map("photo_url")
+  phone         String?
+  role          UserRole @default(CUSTOMER)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Munosabatlar
+  addresses     Address[]
+  orders        Order[]        @relation("CustomerOrders")
+  reviews       Review[]
+  masterProfile Master?
+
+  @@map("users")
+}
+
+enum UserRole {
+  CUSTOMER
+  MASTER
+  ADMIN
+}
+
+// ------------------------------------------------------------
+// Xizmat kategoriyasi (Santexnik, Elektrik, va h.k.)
+// ------------------------------------------------------------
+model Category {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  icon      String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  masters   Master[]
+
+  @@map("categories")
+}
+
+// ------------------------------------------------------------
+// Usta profili — User bilan 1:1, lekin faqat MASTER rolidagilar uchun
+// ------------------------------------------------------------
+model Master {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  categoryId    String   @map("category_id")
+  bio           String?
+  photo         String?
+  experienceYrs Int      @default(0) @map("experience_years")
+  basePrice     Int      @map("base_price") // so'mda, butun son
+  latitude      Float?
+  longitude     Float?
+  isOnline      Boolean  @default(false) @map("is_online")
+  isVerified    Boolean  @default(false) @map("is_verified")
+  ratingAvg     Float    @default(0) @map("rating_avg")
+  reviewsCount  Int      @default(0) @map("reviews_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  Category  @relation(fields: [categoryId], references: [id])
+  skills    MasterSkill[]
+  orders    Order[]
+  reviews   Review[]
+
+  @@index([categoryId])
+  @@map("masters")
+}
+
+// Ko'nikmalar - ko'p-ko'pga bo'lmasin deb sodda qilib alohida jadval
+model MasterSkill {
+  id       String @id @default(uuid())
+  masterId String @map("master_id")
+  label    String
+
+  master   Master @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@map("master_skills")
+}
+
+// ------------------------------------------------------------
+// Mijozning saqlangan manzillari
+// ------------------------------------------------------------
+model Address {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String   // "Uy", "Ish" va h.k.
+  fullText  String   @map("full_text")
+  latitude  Float?
+  longitude Float?
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@map("addresses")
+}
+
+// ------------------------------------------------------------
+// Buyurtma — asosiy biznes obyekt
+// ------------------------------------------------------------
+model Order {
+  id           String       @id @default(uuid())
+  customerId   String       @map("customer_id")
+  masterId     String       @map("master_id")
+  addressId    String?      @map("address_id")
+  scheduledAt  DateTime     @map("scheduled_at")
+  note         String?
+  servicePrice Int          @map("service_price")
+  serviceFee   Int          @default(5000) @map("service_fee")
+  totalPrice   Int          @map("total_price")
+  status       OrderStatus  @default(PENDING)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  customer     User         @relation("CustomerOrders", fields: [customerId], references: [id])
+  master       Master       @relation(fields: [masterId], references: [id])
+  address      Address?     @relation(fields: [addressId], references: [id])
+  statusEvents OrderStatusEvent[]
+  review       Review?
+
+  @@index([customerId])
+  @@index([masterId])
+  @@index([status])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING     // Yuborildi, usta javobini kutmoqda
+  ACCEPTED    // Usta qabul qildi
+  ON_WAY      // Usta yo'lda
+  ARRIVED     // Manzilga yetib keldi
+  IN_PROGRESS // Ish bajarilmoqda
+  COMPLETED   // Yakunlandi
+  CANCELLED   // Bekor qilindi
+}
+
+// Har bir status o'zgarishi tarixi — "live tracking" uchun asos
+model OrderStatusEvent {
+  id        String      @id @default(uuid())
+  orderId   String      @map("order_id")
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_status_events")
+}
+
+// ------------------------------------------------------------
+// Sharh — faqat yakunlangan buyurtma uchun qoldirilishi mumkin
+// ------------------------------------------------------------
+model Review {
+  id        String   @id @default(uuid())
+  orderId   String   @unique @map("order_id")
+  customerId String  @map("customer_id")
+  masterId  String   @map("master_id")
+  rating    Int      // 1-5
+  text      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer  User     @relation(fields: [customerId], references: [id])
+  master    Master   @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@index([masterId])
+  @@map("reviews")
+}
