@@ -18,8 +18,8 @@ services:
     container_name: ustatop-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ustatop
-      POSTGRES_PASSWORD: ustatop_password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: GLtkjTAAvlnDHLWHeibgcWvIbLDhWvxN
       POSTGRES_DB: ustatop_db
     ports:
       - '5432:5432'
@@ -43,7 +43,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgresql://ustatop:ustatop_password@postgres:5432/ustatop_db?schema=public
+      DATABASE_URL: postgresql://postgres:GLtkjTAAvlnDHLWHeibgcWvIbLDhWvxN@yamabiko.proxy.rlwy.net:40971/railway
       JWT_SECRET: ${JWT_SECRET:12345678876543211234567887654321}
       JWT_EXPIRES_IN: 7d
       TELEGRAM_BOT_TOKEN: ${8726745749:AAER6BdfmzO5hpFZu81Y_rTUeK3NsVg1fHo}
