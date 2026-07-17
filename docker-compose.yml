@@ -44,7 +44,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://ustatop:ustatop_password@postgres:5432/ustatop_db?schema=public
-      JWT_SECRET: ${JWT_SECRET:-change_this_to_a_long_random_secret_in_production}
+      JWT_SECRET: ${JWT_SECRET:12345678876543211234567887654321}
       JWT_EXPIRES_IN: 7d
       TELEGRAM_BOT_TOKEN: ${8726745749:AAER6BdfmzO5hpFZu81Y_rTUeK3NsVg1fHo}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
