@@ -4,6 +4,13 @@
 
 FROM node:20-alpine
 
+# Prisma'ning binary engine'lari ishlashi uchun Alpine'ga OpenSSL
+# va kerakli kutubxonalarni o'rnatamiz. Buni qilmasak, Prisma
+# "libssl aniqlanmadi" ogohlantirishi bilan noto'g'ri engine
+# yuklaydi va "Could not parse schema engine response" xatosi
+# beradi (JSON o'rniga engine binary xato format qaytaradi).
+RUN apk add --no-cache openssl libssl3 ca-certificates
+
 WORKDIR /usr/src/app
 
 # Bog'liqliklarni avval nusxalab o'rnatamiz — Docker layer cache
