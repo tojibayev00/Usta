@@ -24,6 +24,7 @@ for (const key of REQUIRED_VARS) {
     console.error('[config] Mavjud environment variable nomlari:', Object.keys(process.env).sort().join(', '));
     process.exit(1);
   }
+}
 
 const config = {
   env: process.env.NODE_ENV || 'development',
