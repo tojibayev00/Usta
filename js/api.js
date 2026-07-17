@@ -12,11 +12,12 @@
  */
 
 // Backend manzili. Lokal ishlab chiqishda 4000-port, production'da
-// o'z domeningizga almashtiring (masalan https://api.ustatop.uz/api).
+// Railway'dagi haqiqiy backend domeni ishlatiladi.
 const API_BASE_URL = (() => {
   const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-  return isLocal ? 'http://localhost:4000/api' : 'https://api.ustatop.uz/api';
+  return isLocal ? 'http://localhost:4000/api' : 'https://usta-production.up.railway.app/api';
 })();
+
 
 const TOKEN_STORAGE_KEY = 'ustatop_token';
 
