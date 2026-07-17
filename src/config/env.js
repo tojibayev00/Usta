@@ -18,9 +18,12 @@ for (const key of REQUIRED_VARS) {
   if (!process.env[key]) {
     // eslint-disable-next-line no-console
     console.error(`[config] Majburiy environment o'zgaruvchi topilmadi: ${key}`);
+    // Debug uchun: qaysi environment variable'lar umuman mavjudligini ko'ramiz
+    // (qiymatlarni emas, faqat nomlarini — sirlarni log'ga chiqarmaslik uchun)
+    // eslint-disable-next-line no-console
+    console.error('[config] Mavjud environment variable nomlari:', Object.keys(process.env).sort().join(', '));
     process.exit(1);
   }
-}
 
 const config = {
   env: process.env.NODE_ENV || 'development',
