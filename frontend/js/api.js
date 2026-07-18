@@ -67,12 +67,17 @@ const Api = {
     }
 
     if (!response.ok || json.success === false) {
-      throw new ApiError(json.message || 'Xatolik yuz berdi', response.status, json.code);
-    }
+  throw new ApiError(json.message || 'Xatolik yuz berdi', response.status, json.code);
+}
 
-    return json.data;
-  },
+// Ba'zi endpointlar (masalan /masters) sahifalash ma'lumotini
+// top-level "pagination" sifatida qaytaradi. Bunday holatlarda
+// frontend { items, pagination } shaklini kutadi.
+if (json.pagination) {
+  return { items: json.data, pagination: json.pagination };
+}
 
+return json.data;
   get(path, opts) {
     return Api.request(path, { ...opts, method: 'GET' });
   },
