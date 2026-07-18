@@ -30,12 +30,14 @@ app.set('trust proxy', 1);
 app.use(helmet());
 
 
-// --- CORS: faqat ruxsat etilgan domenlar ---
+// --- CORS: faqat ruxsat etilgan domenlar (yoki CORS_ORIGIN=* bo'lsa — hammasi) ---
+const allowAllOrigins = config.cors.origins.includes('*');
+
 app.use(
   cors({
     origin(origin, callback) {
       // Server-to-server yoki curl kabi Origin headersiz so'rovlarga ruxsat beramiz
-      if (!origin || config.cors.origins.length === 0 || config.cors.origins.includes(origin)) {
+      if (!origin || allowAllOrigins || config.cors.origins.length === 0 || config.cors.origins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error('CORS: bu domenga ruxsat berilmagan'));
@@ -43,6 +45,7 @@ app.use(
     credentials: true,
   })
 );
+
 
 // --- Body parser ---
 app.use(express.json({ limit: '1mb' }));
