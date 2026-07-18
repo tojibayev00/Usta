@@ -84,6 +84,57 @@ const masterRepository = {
   setOnlineStatus(masterId, isOnline) {
     return prisma.master.update({ where: { id: masterId }, data: { isOnline } });
   },
+
+  // --- Admin bot uchun qo'shimcha metodlar ---------------------
+
+  /** Admin panelidan usta profilini User bilan birga yaratadi */
+  createWithUser({ telegramId, firstName, lastName, categoryId, bio, photo, experienceYrs, basePrice, skills }) {
+    return prisma.$transaction(async (tx) => {
+      const user = await tx.user.upsert({
+        where: { telegramId: BigInt(telegramId) },
+        update: { firstName, lastName, role: 'MASTER' },
+        create: { telegramId: BigInt(telegramId), firstName, lastName, role: 'MASTER' },
+      });
+
+      const master = await tx.master.create({
+        data: {
+          userId: user.id,
+          categoryId,
+          bio,
+          photo,
+          experienceYrs,
+          basePrice,
+          isOnline: true,
+          isVerified: true,
+        },
+      });
+
+      if (skills && skills.length) {
+        await tx.masterSkill.createMany({
+          data: skills.map((label) => ({ masterId: master.id, label })),
+        });
+      }
+
+      return master;
+    });
+  },
+
+  findAllForAdmin() {
+    return prisma.master.findMany({
+      include: { user: true, category: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async delete(masterId) {
+    // Master o'chirilganda bog'liq User'ni o'chirmaymiz (buyurtma tarixi saqlanishi uchun),
+    // faqat Master yozuvini olib tashlaymiz. Skills onDelete: Cascade orqali avtomatik ketadi.
+    return prisma.master.delete({ where: { id: masterId } });
+  },
+
+  setVerified(masterId, isVerified) {
+    return prisma.master.update({ where: { id: masterId }, data: { isVerified } });
+  },
 };
 
 /** Ikki geografik nuqta orasidagi masofani km da qaytaradi (Haversine formulasi) */
