@@ -20,8 +20,15 @@ const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 
+// Railway (va boshqa ko'p hosting platformalari) so'rovlarni proxy orqali
+// yuboradi va X-Forwarded-For headerini qo'shadi. Buni Express'ga aytib
+// qo'ymasak, express-rate-limit "ERR_ERL_UNEXPECTED_X_FORWARDED_FOR"
+// xatosini tashlab, so'rovlarni muvaffaqiyatsiz qiladi.
+app.set('trust proxy', 1);
+
 // --- Xavfsizlik headerlari ---
 app.use(helmet());
+
 
 // --- CORS: faqat ruxsat etilgan domenlar ---
 app.use(
