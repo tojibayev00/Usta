@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<title>UstaTop — Ustangizni toping</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="app-shell" id="app-shell">
+
+  <!-- ======================================================
+       1) SPLASH SCREEN
+  ======================================================= -->
+  <section id="screen-splash" class="screen splash-screen active">
+    <div class="splash-orb o1"></div>
+    <div class="splash-orb o2"></div>
+    <div class="splash-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a4 4 0 10-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.8 2.8-2-2 2.8-2.8z"/>
+      </svg>
+    </div>
+    <div class="splash-title">UstaTop</div>
+    <div class="splash-sub">Ustangizni bir necha soniyada toping</div>
+    <div class="splash-loader"></div>
+  </section>
+
+  <!-- ======================================================
+       3) BOSH SAHIFA
+  ======================================================= -->
+  <section id="screen-home" class="screen">
+    <div class="navbar">
+      <div>
+        <div class="text-secondary" style="font-size:12.5px;">Manzil</div>
+        <div style="font-weight:700; font-size:15px; display:flex; align-items:center; gap:4px;">
+          Chilonzor tumani
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+      <button class="nav-icon-btn" onclick="showToast('Bildirishnomalar yo\'q')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M9.5 21a2.5 2.5 0 005 0"/></svg>
+      </button>
+    </div>
+
+    <div class="screen-content">
+      <div class="greeting-card fade-in">
+        <div style="position:relative; z-index:1;">
+          <div style="font-size:13.5px; opacity:0.9; margin-bottom:4px;">Salom, Aziz 👋</div>
+          <div style="font-size:19px; font-weight:800; letter-spacing:-0.02em; max-width:220px; line-height:1.3;">Bugun qanday yordam kerak?</div>
+        </div>
+      </div>
+
+      <div class="fade-in" style="padding: 4px 20px 20px;">
+        <div class="search-bar" onclick="goToTab('screen-categories')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" placeholder="Santexnik, elektrik qidiring..." readonly />
+        </div>
+      </div>
+
+      <div class="fade-in" style="padding: 0 20px 20px;">
+        <button class="btn btn-secondary" style="width:100%;" onclick="openNearbyMasters()">
+          <span style="display:flex; align-items:center; gap:8px;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            Menga eng yaqin ustalarni ko'rsat
+          </span>
+        </button>
+      </div>
+
+      <div class="section-header">
+        <h3>Kategoriyalar</h3>
+        <span class="link" onclick="goToTab('screen-categories')">Barchasi</span>
+      </div>
+      <div id="home-category-grid" class="category-grid" style="padding: 0 20px 28px;"></div>
+
+      <div class="section-header">
+        <h3>Eng yaxshi ustalar</h3>
+        <span class="link" onclick="openAllMasters()">Barchasi</span>
+      </div>
+      <div id="home-top-masters" class="hscroll" style="padding-bottom: 8px;"></div>
+    </div>
+
+    <nav class="tabbar">
+      <button class="tab-item active" id="tab-home" onclick="goToTab('screen-home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+        <span>Bosh sahifa</span>
+      </button>
+      <button class="tab-item" id="tab-categories" onclick="goToTab('screen-categories')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Kategoriyalar</span>
+      </button>
+      <button class="tab-item" id="tab-history" onclick="goToTab('screen-history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span>Tarix</span>
+      </button>
+      <button class="tab-item" id="tab-profile" onclick="goToTab('screen-profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ======================================================
+       4) XIZMAT KATEGORIYALARI
+  ======================================================= -->
+  <section id="screen-categories" class="screen">
+    <div class="navbar-large-title">Kategoriyalar</div>
+    <div class="screen-content">
+      <div class="fade-in" style="padding: 0 20px 20px;">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" placeholder="Xizmat turini qidiring..." />
+        </div>
+      </div>
+      <div id="categories-full-grid" class="category-grid stagger" style="padding: 0 20px 28px;"></div>
+    </div>
+    <nav class="tabbar">
+      <button class="tab-item" id="tab-home-dup1" onclick="goToTab('screen-home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+        <span>Bosh sahifa</span>
+      </button>
+      <button class="tab-item active" id="tab-categories-dup1" onclick="goToTab('screen-categories')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Kategoriyalar</span>
+      </button>
+      <button class="tab-item" onclick="goToTab('screen-history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span>Tarix</span>
+      </button>
+      <button class="tab-item" onclick="goToTab('screen-profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ======================================================
+       5) USTALAR RO'YXATI
+  ======================================================= -->
+  <section id="screen-masters-list" class="screen">
+    <div class="navbar">
+      <button class="nav-icon-btn" onclick="App.back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="navbar-title" id="masters-list-title">Santexnik</span>
+      <button class="nav-icon-btn" onclick="openLocationFilterSheet()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </div>
+    <div class="screen-content no-tabbar">
+      <div id="masters-filter-bar" class="filter-bar" style="margin-bottom:16px;">
+        <button class="chip active" onclick="setMasterFilter('all', this)">Barchasi</button>
+        <button class="chip" onclick="setMasterFilter('top', this)">Top reyting</button>
+        <button class="chip" onclick="setMasterFilter('near', this)">Eng yaqin</button>
+        <button class="chip" onclick="setMasterFilter('cheap', this)">Arzon narx</button>
+        <button class="chip" onclick="setMasterFilter('online', this)">Onlayn</button>
+      </div>
+      <div id="masters-list-wrap"></div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       6) USTA PROFILI
+  ======================================================= -->
+  <section id="screen-master-profile" class="screen">
+    <div class="screen-content no-tabbar" id="master-profile-content" style="padding-bottom: 90px;"></div>
+    <div class="sticky-cta">
+      <button class="nav-icon-btn" style="flex-shrink:0;" onclick="showToast('Xabar yuborish tez orada')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z"/></svg>
+      </button>
+      <button class="btn btn-primary" onclick="startOrderFlow()">
+        Buyurtma berish · <span id="master-profile-price"></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       7) BUYURTMA: SANA / VAQT TANLASH
+  ======================================================= -->
+  <section id="screen-order-datetime" class="screen">
+    <div class="navbar">
+      <button class="nav-icon-btn" onclick="App.back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="navbar-title">Sana va vaqt</span>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="stepper">
+      <div class="stepper-dot done"></div>
+      <div class="stepper-dot"></div>
+      <div class="stepper-dot"></div>
+    </div>
+    <div class="screen-content no-tabbar" style="padding-bottom: 100px;">
+      <div class="section-header"><h3>Sanani tanlang</h3></div>
+      <div id="order-date-scroll" class="date-scroll" style="margin-bottom: 24px;"></div>
+
+      <div class="section-header"><h3>Vaqtni tanlang</h3></div>
+      <div id="order-time-grid" class="time-grid"></div>
+    </div>
+    <div class="sticky-cta">
+      <button id="order-datetime-continue" class="btn btn-primary" disabled onclick="goToOrderConfirm()">Davom etish</button>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       BUYURTMA BERISH — Tasdiqlash sahifasi
+  ======================================================= -->
+  <section id="screen-order-confirm" class="screen">
+    <div class="navbar">
+      <button class="nav-icon-btn" onclick="App.back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="navbar-title">Buyurtmani tasdiqlash</span>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="stepper">
+      <div class="stepper-dot done"></div>
+      <div class="stepper-dot done"></div>
+      <div class="stepper-dot"></div>
+    </div>
+    <div class="screen-content no-tabbar" id="order-confirm-content" style="padding-bottom: 100px;"></div>
+    <div class="sticky-cta">
+      <button class="btn btn-primary" onclick="submitOrder()">Buyurtmani yuborish</button>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       8) BUYURTMA HOLATI — LIVE TRACKING
+  ======================================================= -->
+  <section id="screen-order-status" class="screen">
+    <div class="navbar">
+      <button class="nav-icon-btn" onclick="goToTab('screen-home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="navbar-title">Buyurtma holati</span>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="screen-content no-tabbar" style="padding-bottom:24px;">
+      <div class="tracking-map">
+        <svg class="route-path" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M16,78 C 30,70 40,68 50,55 C 60,42 70,35 80,20" />
+        </svg>
+        <div class="map-pin dest" style="left:80%; top:20%;"></div>
+        <div class="master-pulse" id="tracking-master-pin" style="left:16%; top:78%;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="13" height="9" rx="1"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="6" cy="18.5" r="1.6"/><circle cx="17.5" cy="18.5" r="1.6"/></svg>
+        </div>
+      </div>
+
+      <div class="eta-banner fade-in">
+        <img id="status-master-photo" class="avatar" src="" style="width:52px;height:52px;" />
+        <div style="flex:1;">
+          <div id="status-master-name" style="font-weight:700; font-size:15px;">Usta</div>
+          <div id="status-eta-text" class="text-secondary" style="font-size:13px; margin-top:2px;">Usta buyurtmangizni qabul qildi</div>
+        </div>
+        <button class="nav-icon-btn" onclick="callMaster()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .3 2 .7 3a2 2 0 01-.4 2.1L8 10.3a16 16 0 006 6l1.5-1.5a2 2 0 012.1-.4c1 .4 2 .6 3 .7a2 2 0 011.7 2z"/></svg>
+        </button>
+      </div>
+
+      <div style="padding: 0 20px 8px;">
+        <div class="text-secondary" style="font-size:13px; text-align:center;" id="status-master-eta">15 daqiqada yetib keladi</div>
+      </div>
+
+      <div class="list-group" style="margin: 8px 20px 0;">
+        <div id="status-timeline" class="status-timeline"></div>
+      </div>
+
+      <div style="padding: 20px; display:none;" id="status-done-cta">
+        <button class="btn btn-primary" onclick="finishOrderDemo()">Bosh sahifaga qaytish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       9) BUYURTMALAR TARIXI
+  ======================================================= -->
+  <section id="screen-history" class="screen">
+    <div class="navbar-large-title">Buyurtmalar tarixi</div>
+    <div class="screen-content">
+      <div id="history-list-wrap"></div>
+    </div>
+    <nav class="tabbar">
+      <button class="tab-item" onclick="goToTab('screen-home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+        <span>Bosh sahifa</span>
+      </button>
+      <button class="tab-item" onclick="goToTab('screen-categories')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Kategoriyalar</span>
+      </button>
+      <button class="tab-item active" id="tab-history-dup1" onclick="goToTab('screen-history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span>Tarix</span>
+      </button>
+      <button class="tab-item" onclick="goToTab('screen-profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ======================================================
+       10) PROFIL
+  ======================================================= -->
+  <section id="screen-profile" class="screen">
+    <div class="navbar-large-title">Profil</div>
+    <div class="screen-content">
+      <div class="profile-header fade-in">
+        <img id="profile-user-photo" class="avatar" src="" style="width:68px;height:68px;" />
+        <div style="flex:1;">
+          <div id="profile-user-name" style="font-weight:800; font-size:18px; letter-spacing:-0.01em;"></div>
+          <div id="profile-user-phone" class="text-secondary" style="font-size:13.5px; margin-top:2px;"></div>
+        </div>
+        <button class="nav-icon-btn" onclick="openEditProfileSheet()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </button>
+      </div>
+
+      <div style="padding: 0 20px 20px;">
+        <div class="card" style="display:flex; align-items:center; gap:16px; background: linear-gradient(135deg, #0A84FF, #4DA6FF); color:#fff; box-shadow: 0 12px 24px rgba(10,132,255,0.25);">
+          <div style="flex:1;">
+            <div style="font-size:26px; font-weight:800;" id="profile-orders-count">12</div>
+            <div style="font-size:12.5px; opacity:0.9;">jami buyurtmalar</div>
+          </div>
+          <div style="width:1px; height:36px; background:rgba(255,255,255,0.3);"></div>
+          <div style="flex:1;">
+            <div style="font-size:26px; font-weight:800;">4.9</div>
+            <div style="font-size:12.5px; opacity:0.9;">mijoz reytingi</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 0 20px 16px;">
+        <div class="list-group">
+          <div class="list-row" onclick="goToTab('screen-history')">
+            <div class="settings-icon-wrap" style="background:var(--color-primary-soft); color:var(--color-primary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            </div>
+            <span style="flex:1; font-weight:600; font-size:14.5px;">Buyurtmalar tarixi</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" onclick="openSavedAddresses()">
+            <div class="settings-icon-wrap" style="background:rgba(255,159,10,0.12); color:var(--color-warning);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            </div>
+            <span style="flex:1; font-weight:600; font-size:14.5px;">Saqlangan manzillar</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" onclick="showToast('Bu bo\'lim tez orada qo\'shiladi')">
+            <div class="settings-icon-wrap" style="background:rgba(48,209,88,0.12); color:var(--color-success);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h13a1 1 0 011 1v3"/><path d="M3 7v11a2 2 0 002 2h14a1 1 0 001-1v-8a1 1 0 00-1-1H6a2 2 0 01-2-2z"/></svg>
+            </div>
+            <span style="flex:1; font-weight:600; font-size:14.5px;">To'lov usullari</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 0 20px 16px;">
+        <div class="list-group">
+          <div class="list-row" onclick="App.navigate('screen-settings')">
+            <div class="settings-icon-wrap" style="background:#EEF0F4; color:var(--color-text-secondary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.2a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.2a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg>
+            </div>
+            <span style="flex:1; font-weight:600; font-size:14.5px;">Sozlamalar</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+          <div class="list-row" onclick="showToast('Yordam: @ustatop_support ga yozing')">
+            <div class="settings-icon-wrap" style="background:#EEF0F4; color:var(--color-text-secondary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.5 2-2.5 3.5"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>
+            </div>
+            <span style="flex:1; font-weight:600; font-size:14.5px;">Yordam va qo'llab-quvvatlash</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 0 20px 20px;">
+        <button class="btn btn-danger-ghost" onclick="showToast('Tizimdan chiqish')">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          Tizimdan chiqish
+        </button>
+      </div>
+    </div>
+    <nav class="tabbar">
+      <button class="tab-item" onclick="goToTab('screen-home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+        <span>Bosh sahifa</span>
+      </button>
+      <button class="tab-item" onclick="goToTab('screen-categories')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Kategoriyalar</span>
+      </button>
+      <button class="tab-item" onclick="goToTab('screen-history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span>Tarix</span>
+      </button>
+      <button class="tab-item active" id="tab-profile-dup1" onclick="goToTab('screen-profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ======================================================
+       11) SOZLAMALAR
+  ======================================================= -->
+  <section id="screen-settings" class="screen">
+    <div class="navbar">
+      <button class="nav-icon-btn" onclick="App.back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="navbar-title">Sozlamalar</span>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="screen-content no-tabbar">
+      <div class="section-header"><h3>Bildirishnomalar</h3></div>
+      <div class="list-group" style="margin: 0 20px 24px;">
+        <div class="list-row">
+          <span style="flex:1; font-weight:600; font-size:14.5px;">Push-bildirishnomalar</span>
+          <div class="toggle on" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="list-row">
+          <span style="flex:1; font-weight:600; font-size:14.5px;">Aksiya va chegirmalar</span>
+          <div class="toggle" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="list-row">
+          <span style="flex:1; font-weight:600; font-size:14.5px;">SMS xabarnomalar</span>
+          <div class="toggle on" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="section-header"><h3>Ilova</h3></div>
+      <div class="list-group" style="margin: 0 20px 24px;">
+        <div class="list-row" onclick="showToast('Hozircha faqat o\'zbekcha mavjud')">
+          <div class="settings-icon-wrap" style="background:var(--color-primary-soft); color:var(--color-primary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18 14 14 0 010-18z"/></svg>
+          </div>
+          <span style="flex:1; font-weight:600; font-size:14.5px;">Til</span>
+          <span class="text-secondary" style="font-size:14px;">O'zbekcha</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="list-row">
+          <div class="settings-icon-wrap" style="background:rgba(11,18,32,0.06); color:var(--color-text);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1110 4a7 7 0 0010 10.5z"/></svg>
+          </div>
+          <span style="flex:1; font-weight:600; font-size:14.5px;">Tungi rejim</span>
+          <div class="toggle" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="section-header"><h3>Xavfsizlik</h3></div>
+      <div class="list-group" style="margin: 0 20px 24px;">
+        <div class="list-row" onclick="showToast('Tez orada qo\'shiladi')">
+          <div class="settings-icon-wrap" style="background:rgba(48,209,88,0.12); color:var(--color-success);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v5C20 16 16.6 20 12 22 7.4 20 4 16 4 10.5v-5z"/></svg>
+          </div>
+          <span style="flex:1; font-weight:600; font-size:14.5px;">Maxfiylik siyosati</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="list-row" onclick="showToast('Tez orada qo\'shiladi')">
+          <span style="flex:1; font-weight:600; font-size:14.5px;">Foydalanish shartlari</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+
+      <div style="text-align:center; padding: 12px 0 30px;">
+        <div class="text-tertiary" style="font-size:12px;">UstaTop v1.0.0</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================
+       GLOBAL: Manzil o'zgartirish bottom-sheet
+  ======================================================= -->
+  <div class="sheet-overlay" id="sheet-overlay" onclick="hideSheet('address-sheet')"></div>
+  <div class="bottom-sheet" id="address-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3 style="font-size:17px; font-weight:700; margin:0 0 14px;">Manzilni o'zgartirish</h3>
+    <div class="address-map-preview" style="margin-bottom:14px; display:flex; align-items:center; justify-content:center; color:var(--color-primary);">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>
+    </div>
+    <input id="address-sheet-input" class="input-field" placeholder="Ko'cha, uy raqami" style="margin-bottom:14px;" />
+    <button class="btn btn-primary" onclick="saveAddress()">Saqlash</button>
+  </div>
+
+  <!-- ======================================================
+       GLOBAL: Saqlangan manzillar ro'yxati (bottom-sheet)
+  ======================================================= -->
+  <div class="bottom-sheet" id="saved-addresses-sheet" onclick="event.stopPropagation()" style="max-height:70vh; overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <h3 style="font-size:17px; font-weight:700; margin:0 0 14px;">Saqlangan manzillar</h3>
+    <div id="saved-addresses-list"></div>
+    <button class="btn btn-secondary" style="margin-top:14px;" onclick="hideSheet('saved-addresses-sheet')">Yopish</button>
+  </div>
+
+  <!-- ======================================================
+       GLOBAL: Viloyat/tuman bo'yicha qidiruv (bottom-sheet)
+  ======================================================= -->
+  <div class="bottom-sheet" id="location-filter-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3 style="font-size:17px; font-weight:700; margin:0 0 14px;">Manzil bo'yicha qidirish</h3>
+    <div style="margin-bottom:12px;">
+      <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Viloyat</label>
+      <select id="location-filter-region" class="input-field">
+        <option value="">Barcha viloyatlar</option>
+      </select>
+    </div>
+    <div style="margin-bottom:18px;">
+      <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Tuman / shahar</label>
+      <input id="location-filter-district" class="input-field" placeholder="Masalan: Chilonzor tumani" />
+    </div>
+    <button class="btn btn-primary" onclick="applyLocationFilter()">Qidirish</button>
+    <button class="btn btn-ghost" style="margin-top:8px;" onclick="clearLocationFilter()">Filtrni tozalash</button>
+  </div>
+
+  <!-- ======================================================
+       GLOBAL: Profilni tahrirlash (bottom-sheet)
+  ======================================================= -->
+  <div class="bottom-sheet" id="edit-profile-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3 style="font-size:17px; font-weight:700; margin:0 0 14px;">Telefon raqamini tahrirlash</h3>
+    <div class="phone-input-row" style="margin-bottom:16px;">
+      <span class="phone-prefix">+998</span>
+      <input id="edit-profile-phone-input" type="tel" inputmode="numeric" placeholder="90 123 45 67" />
+    </div>
+    <button class="btn btn-primary" onclick="saveProfilePhone()">Saqlash</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="global-toast">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+    <span>Buyurtma yuborildi!</span>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/router.js"></script>
+<script src="js/render.js"></script>
+<script src="js/orderFlow.js"></script>
+<script src="js/tracking.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  // Telegram Web App bilan integratsiya (agar Telegram ichida ochilsa)
+  if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    tg.setHeaderColor('#F7FAFC');
+    tg.setBackgroundColor('#F7FAFC');
+  }
+</script>
+</body>
+</html>

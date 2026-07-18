@@ -1,0 +1,12 @@
+{
+  "name": "ustatop-frontend",
+  "version": "1.0.0",
+  "description": "UstaTop — Telegram Web App frontend (statik fayllar)",
+  "private": true,
+  "scripts": {
+    "start": "serve -s . -l $PORT"
+  },
+  "dependencies": {
+    "serve": "^14.2.3"
+  }
+}
