@@ -29,4 +29,5 @@ COPY . .
 EXPOSE 4000
 
 # Konteyner ishga tushganda: migratsiyalarni qo'llash, keyin serverni ko'tarish
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node src/server.js"]
+
