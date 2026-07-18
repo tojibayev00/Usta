@@ -41,6 +41,7 @@ const config = {
 
   telegram: {
     botToken: process.env.TELEGRAM_BOT_TOKEN,
+    adminId: process.env.ADMIN_TELEGRAM_ID || null,
   },
 
   cors: {
