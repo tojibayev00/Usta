@@ -69,6 +69,14 @@ const Api = {
     if (!response.ok || json.success === false) {
       throw new ApiError(json.message || 'Xatolik yuz berdi', response.status, json.code);
     }
+    if (json.pagination) {
+      return { items: json.data, pagination: json.pagination };
+    }
+
+    return json.data;
+  },
+
+  get(path, opts) {
 
     return json.data;
   },
