@@ -96,7 +96,11 @@ PENDING → ACCEPTED → ON_WAY → ARRIVED → IN_PROGRESS → COMPLETED
 | GET | `/api/categories` | — | Xizmat kategoriyalari |
 | GET | `/api/masters` | — | Ustalar ro'yxati (filtr/saralash) |
 | GET | `/api/masters/:id` | — | Usta profili + sharhlar |
+| POST | `/api/masters/register` | ✅ | Mijoz o'zini usta sifatida ro'yxatdan o'tkazadi |
+| GET | `/api/masters/mine` | ✅ (MASTER) | Ustaning o'z profili |
 | PATCH | `/api/masters/me/online` | ✅ (MASTER) | Online holatni almashtirish |
+| GET | `/api/locations/regions` | — | O'zbekiston viloyatlari ro'yxati |
+| GET | `/api/locations/districts?region=...` | — | Tanlangan viloyat tumanlari |
 | POST | `/api/orders` | ✅ | Yangi buyurtma yaratish |
 | GET | `/api/orders/mine` | ✅ | Mening buyurtmalarim (mijoz) |
 | GET | `/api/orders/master/mine` | ✅ (MASTER) | Qabul qilingan buyurtmalar |
@@ -112,8 +116,7 @@ PENDING → ACCEPTED → ON_WAY → ARRIVED → IN_PROGRESS → COMPLETED
 - `categoryId` yoki `categorySlug` — kategoriya bo'yicha
 - `sort` — `rating` \| `distance` \| `price_asc` \| `price_desc`
 - `onlineOnly=true` — faqat onlayn ustalar
-- `region` — viloyat bo'yicha (qisman moslik, katta-kichik harf farqi yo'q)
-- `district` — tuman bo'yicha (qisman moslik)
+- `region`, `district`, `village` — manzil bo'yicha (qisman moslik, katta-kichik harf farqi yo'q)
 - `lat`, `lng` — `sort=distance` uchun majburiy (Haversine formula bilan hisoblanadi)
 - `page`, `pageSize` — sahifalash
 
