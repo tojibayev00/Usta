@@ -11,6 +11,7 @@ const categoryRoutes = require('./categoryRoutes');
 const masterRoutes = require('./masterRoutes');
 const orderRoutes = require('./orderRoutes');
 const addressRoutes = require('./addressRoutes');
+const locationRoutes = require('./locationRoutes');
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/categories', categoryRoutes);
 router.use('/masters', masterRoutes);
 router.use('/orders', orderRoutes);
 router.use('/addresses', addressRoutes);
+router.use('/locations', locationRoutes);
 
 module.exports = router;
