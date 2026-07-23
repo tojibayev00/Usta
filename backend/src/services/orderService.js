@@ -18,8 +18,6 @@ const masterRepository = require('../repositories/masterRepository');
 const addressRepository = require('../repositories/addressRepository');
 const AppError = require('../utils/AppError');
 
-const SERVICE_FEE = 5000;
-
 // Ruxsat etilgan status o'tishlari
 const ORDER_STATUS_FLOW = {
   PENDING: ['ACCEPTED', 'CANCELLED'],
@@ -34,7 +32,9 @@ const ORDER_STATUS_FLOW = {
 const orderService = {
   /**
    * Yangi buyurtma yaratadi. Agar `address.id` berilmagan bo'lsa,
-   * yangi manzil sifatida saqlaydi.
+   * yangi manzil sifatida saqlaydi. Narx endi qat'iy hisoblanmaydi —
+   * mijoz va usta o'zaro kelishadi; basePrice faqat taxminiy ma'lumot
+   * sifatida ko'rsatiladi (agar usta uni ko'rsatgan bo'lsa).
    */
   async create(customerId, payload) {
     const master = await masterRepository.findById(payload.masterId);
@@ -52,17 +52,15 @@ const orderService = {
       addressId = newAddress.id;
     }
 
-    const totalPrice = master.basePrice + SERVICE_FEE;
-
     const order = await orderRepository.create({
       customerId,
       masterId: master.id,
       addressId,
       scheduledAt: new Date(payload.scheduledAt),
       note: payload.note,
-      servicePrice: master.basePrice,
-      serviceFee: SERVICE_FEE,
-      totalPrice,
+      servicePrice: master.basePrice ?? null,
+      serviceFee: 0,
+      totalPrice: master.basePrice ?? null,
       status: 'PENDING',
     });
 
@@ -172,6 +170,7 @@ function serializeOrderSummary(order) {
     scheduledAt: order.scheduledAt,
     totalPrice: order.totalPrice,
     createdAt: order.createdAt,
+    hasReview: !!order.review,
     master: order.master
       ? {
           id: order.master.id,

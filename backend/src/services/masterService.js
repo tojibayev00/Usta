@@ -29,6 +29,7 @@ const masterService = {
       lng: query.lng,
       region: query.region,
       district: query.district,
+      village: query.village,
       skip: (page - 1) * pageSize,
       take: pageSize,
     });
@@ -51,21 +52,56 @@ const masterService = {
     const updated = await masterRepository.setOnlineStatus(master.id, isOnline);
     return serializeMasterSummary(updated);
   },
+
+  /** Mijoz Web App ichida "Usta bo'lish" formasini to'ldirganda chaqiriladi */
+  async registerSelf(userId, payload) {
+    const existing = await masterRepository.findByUserId(userId);
+    if (existing) {
+      throw AppError.conflict("Siz allaqachon usta sifatida ro'yxatdan o'tgansiz", 'ALREADY_MASTER');
+    }
+
+    const category = await categoryRepository.findById(payload.categoryId);
+    if (!category) throw AppError.notFound('Kategoriya topilmadi');
+
+    const master = await masterRepository.createForExistingUser(userId, {
+      categoryId: payload.categoryId,
+      bio: payload.bio,
+      photo: payload.photo || undefined,
+      experienceYrs: payload.experienceYrs || 0,
+      basePrice: payload.basePrice,
+      region: payload.region,
+      district: payload.district,
+      village: payload.village,
+      phone: payload.phone,
+      skills: payload.skills || [],
+    });
+
+    return masterService.getById(master.id);
+  },
+
+  /** Ustaning o'zi (Profile sahifasida) o'z profilini ko'rishi uchun */
+  async getMine(userId) {
+    const master = await masterRepository.findByUserId(userId);
+    if (!master) throw AppError.notFound('Sizda usta profili topilmadi');
+    return masterService.getById(master.id);
+  },
 };
 
 function serializeMasterSummary(m) {
-  const locationParts = [m.region, m.district].filter(Boolean);
+  const locationParts = [m.region, m.district, m.village].filter(Boolean);
   return {
     id: m.id,
     name: `${m.user.firstName} ${m.user.lastName || ''}`.trim(),
     photo: m.photo || m.user.photoUrl,
+    phone: m.user.phone || null,
     category: m.category ? { id: m.category.id, name: m.category.name, slug: m.category.slug } : undefined,
     rating: m.ratingAvg,
     reviewsCount: m.reviewsCount,
     experienceYears: m.experienceYrs,
-    price: m.basePrice,
+    price: m.basePrice ?? null,
     region: m.region || null,
     district: m.district || null,
+    village: m.village || null,
     location: locationParts.length ? locationParts.join(', ') : null,
     distanceKm: m.distanceKm ?? null,
     isOnline: m.isOnline,
