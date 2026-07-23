@@ -1,22 +1,22 @@
 /**
  * ============================================================
- * Admin Bot — Telegram orqali ustalarni boshqarish
+ * UstaTop Bot — umumiy foydalanuvchilar + admin buyruqlari
  * ------------------------------------------------------------
- * Bu oddiy foydalanuvchilar ko'rmaydigan, faqat ADMIN_TELEGRAM_ID
- * da ko'rsatilgan Telegram ID'dan kelgan xabarlarga javob
- * beradigan bot. Xuddi shu TELEGRAM_BOT_TOKEN ishlatiladi —
- * bitta bot ham Web App tugmasini ko'rsatadi, ham admin
- * buyruqlarini qabul qiladi.
+ * Bitta bot ikkita rolda ishlaydi:
+ *  1) Oddiy foydalanuvchi uchun: /start bosilganda qisqa
+ *     qo'llanma va Web App'ni ochish tugmasi ko'rsatiladi.
+ *  2) Faqat ADMIN_TELEGRAM_ID'dan kelgan xabarlar uchun:
+ *     ustalarni boshqarish va xabar tarqatish buyruqlari.
  *
- * Buyruqlar:
- *   /addmaster          — yangi usta qo'shish (bosqichma-bosqich so'rov)
- *   /listmasters        — barcha ustalar ro'yxati (ID bilan)
- *   /editmaster <id>     — mavjud ustaning bitta maydonini tahrirlash
- *   /deletemaster <id>   — ustani o'chirish
- *   /verify <id>         — ustani "tasdiqlangan" qilish
- *   /toggleonline <id>   — ustaning onlayn/offlayn holatini almashtirish
- *   /cancel              — joriy amalni bekor qilish
- *   /help                — buyruqlar ro'yxati
+ * Admin buyruqlari:
+ *   /addmaster           — yangi usta qo'shish (bosqichma-bosqich so'rov)
+ *   /listmasters         — barcha ustalar ro'yxati (ID bilan)
+ *   /editmaster <id>      — mavjud ustaning bitta maydonini tahrirlash
+ *   /deletemaster <id>    — ustani o'chirish
+ *   /verify <id>          — ustani "tasdiqlangan" qilish
+ *   /toggleonline <id>    — ustaning onlayn/offlayn holatini almashtirish
+ *   /broadcast            — barcha foydalanuvchilarga xabar yuborish
+ *   /cancel               — joriy amalni bekor qilish
  * ============================================================
  */
 
@@ -24,10 +24,9 @@ const TelegramBot = require('node-telegram-bot-api');
 const config = require('../config/env');
 const categoryRepository = require('../repositories/categoryRepository');
 const masterRepository = require('../repositories/masterRepository');
+const userRepository = require('../repositories/userRepository');
 
-// Har bir admin chat uchun joriy "wizard" holatini xotirada saqlaymiz.
-// Bitta admin uchun bu yetarli; agar kelajakda bir nechta admin bo'lsa,
-// bu Redis kabi tashqi xotiraga ko'chirilishi kerak.
+// Har bir chat uchun joriy "wizard" holatini xotirada saqlaymiz.
 const wizardState = new Map();
 
 const ADD_MASTER_STEPS = [
@@ -36,9 +35,10 @@ const ADD_MASTER_STEPS = [
   { key: 'firstName', prompt: "Ustaning ismini yuboring:" },
   { key: 'lastName', prompt: "Familiyasini yuboring (bo'lmasa /skip yozing):" },
   { key: 'experienceYrs', prompt: "Tajribasi necha yil? (faqat raqam, masalan 5):" },
-  { key: 'basePrice', prompt: "Xizmat narxi so'mda (faqat raqam, masalan 80000):" },
+  { key: 'basePrice', prompt: "Taxminiy narxi so'mda (bo'lmasa /skip, narx keyin kelishiladi):" },
   { key: 'region', prompt: "Viloyatini yuboring (masalan: Toshkent shahri):" },
   { key: 'district', prompt: "Tumanini yuboring (masalan: Chilonzor tumani):" },
+  { key: 'village', prompt: "Qishlog'i/mahallasini yuboring (bo'lmasa /skip):" },
   { key: 'bio', prompt: "Qisqacha ma'lumot/bio yuboring (bo'lmasa /skip):" },
   { key: 'photo', prompt: "Rasm URL manzilini yuboring (bo'lmasa /skip):" },
   { key: 'skills', prompt: "Ko'nikmalarni vergul bilan ajratib yuboring (masalan: Quvur ta'mirlash, Isitish tizimi). Bo'lmasa /skip:" },
@@ -51,6 +51,7 @@ const EDITABLE_FIELDS = [
   { key: 'experienceYrs', label: 'Tajriba (yil)' },
   { key: 'region', label: 'Viloyat' },
   { key: 'district', label: 'Tuman' },
+  { key: 'village', label: 'Qishloq/mahalla' },
   { key: 'bio', label: 'Bio' },
   { key: 'photo', label: 'Rasm URL' },
 ];
@@ -65,35 +66,51 @@ async function findMasterByShortId(idPrefix) {
   return masters.find((m) => m.id.startsWith(idPrefix));
 }
 
-function startAdminBot() {
-  if (!config.telegram.adminId) {
-    // eslint-disable-next-line no-console
-    console.warn('[AdminBot] ADMIN_TELEGRAM_ID berilmagan — admin bot buyruqlari ishlamaydi.');
-    return null;
+function customerStartKeyboard() {
+  const rows = [];
+  if (config.frontendUrl) {
+    rows.push([{ text: "📱 Ilovani ochish", web_app: { url: config.frontendUrl } }]);
   }
+  if (config.telegram.adminContactUsername) {
+    rows.push([{ text: "🆘 Yordam kerak", url: `https://t.me/${config.telegram.adminContactUsername}` }]);
+  }
+  return rows.length ? { reply_markup: { inline_keyboard: rows } } : {};
+}
+
+function startAdminBot() {
+  if (!config.telegram.botToken) return null;
 
   const bot = new TelegramBot(config.telegram.botToken, { polling: true });
 
   bot.on('polling_error', (err) => {
     // eslint-disable-next-line no-console
-    console.error('[AdminBot] Polling xatosi:', err.message);
+    console.error('[Bot] Polling xatosi:', err.message);
   });
 
-  bot.onText(/^\/start$|^\/help$/, (msg) => {
-    if (!isAdmin(msg.from.id)) return;
-    bot.sendMessage(msg.chat.id, [
-      'UstaTop Admin Bot',
+  // ------------------------------------------------------------
+  // /start — HAMMA uchun (admin uchun boshqacha, oddiy uchun boshqacha)
+  // ------------------------------------------------------------
+  bot.onText(/^\/start$/, (msg) => {
+    if (isAdmin(msg.from.id)) {
+      return bot.sendMessage(msg.chat.id, adminHelpText());
+    }
+
+    const guide = [
+      "🔧 <b>UstaTop</b>ga xush kelibsiz!",
       '',
-      "/addmaster — yangi usta qo'shish",
-      "/listmasters — ustalar ro'yxati",
-      '/editmaster <id> — ustani tahrirlash',
-      "/deletemaster <id> — ustani o'chirish",
-      '/toggleonline <id> — onlayn/offlayn almashtirish',
-      '/verify <id> — ustani tasdiqlash',
-      '/cancel — joriy amalni bekor qilish',
+      "Bu bot orqali yaqin atrofingizdagi santexnik, elektrik, konditsioner ustasi va boshqa mutaxassislarni topishingiz mumkin.",
       '',
-      "ID'larni /listmasters orqali ko'rish mumkin (# belgisidan keyingi qism).",
-    ].join('\n'));
+      "👉 Boshlash uchun pastdagi <b>\"Ilovani ochish\"</b> tugmasini bosing.",
+      "👉 O'zingiz usta bo'lsangiz, ilova ichida \"Usta sifatida ro'yxatdan o'tish\"ni tanlang.",
+      "👉 Savol yoki muammo bo'lsa — \"Yordam kerak\" tugmasi orqali biz bilan bog'laning.",
+    ].join('\n');
+
+    bot.sendMessage(msg.chat.id, guide, { parse_mode: 'HTML', ...customerStartKeyboard() });
+  });
+
+  bot.onText(/^\/help$/, (msg) => {
+    if (isAdmin(msg.from.id)) return bot.sendMessage(msg.chat.id, adminHelpText());
+    bot.sendMessage(msg.chat.id, "Yordam kerakmi? Pastdagi tugma orqali murojaat qiling.", customerStartKeyboard());
   });
 
   bot.onText(/^\/cancel$/, (msg) => {
@@ -130,9 +147,11 @@ function startAdminBot() {
     if (masters.length === 0) {
       return bot.sendMessage(msg.chat.id, "Hozircha ustalar yo'q.");
     }
-    const lines = masters.map((m) =>
-      `#${m.id.slice(0, 8)} — ${m.user.firstName} ${m.user.lastName || ''} | ${m.category.name} | ${m.basePrice} so'm | ${[m.region, m.district].filter(Boolean).join(', ') || 'manzil yo\'q'} | ${m.isOnline ? 'onlayn' : 'offlayn'}${m.isVerified ? ' ✅' : ''}`
-    );
+    const lines = masters.map((m) => {
+      const loc = [m.region, m.district, m.village].filter(Boolean).join(', ') || "manzil yo'q";
+      const price = m.basePrice ? `${m.basePrice} so'm` : 'narx kelishiladi';
+      return `#${m.id.slice(0, 8)} — ${m.user.firstName} ${m.user.lastName || ''} | ${m.category.name} | ${price} | ${loc} | ${m.isOnline ? 'onlayn' : 'offlayn'}${m.isVerified ? ' ✅' : ''}`;
+    });
     bot.sendMessage(msg.chat.id, lines.join('\n\n'));
   });
 
@@ -199,6 +218,18 @@ function startAdminBot() {
   });
 
   // ------------------------------------------------------------
+  // /broadcast — barcha foydalanuvchilarga xabar yuborish
+  // ------------------------------------------------------------
+  bot.onText(/^\/broadcast$/, (msg) => {
+    if (!isAdmin(msg.from.id)) return;
+    wizardState.set(msg.chat.id, { mode: 'broadcast_await_content' });
+    bot.sendMessage(msg.chat.id, [
+      "Yubormoqchi bo'lgan xabaringizni yuboring — matn, rasm (izoh bilan) yoki havolali matn bo'lishi mumkin.",
+      "Bekor qilish uchun /cancel yozing.",
+    ].join('\n'));
+  });
+
+  // ------------------------------------------------------------
   // Inline keyboard bosilganda (kategoriya tanlash yoki tahrirlash maydoni)
   // ------------------------------------------------------------
   bot.on('callback_query', async (query) => {
@@ -228,15 +259,23 @@ function startAdminBot() {
   });
 
   // ------------------------------------------------------------
-  // Oddiy matnli xabarlar — wizard bosqichlarini boshqaradi.
-  // Buyruqlar (/ bilan boshlanuvchi) bu yerda e'tiborga olinmaydi.
+  // Barcha xabarlar — wizard bosqichlarini boshqaradi (faqat admin uchun,
+  // chunki wizardState faqat admin buyruqlari orqali to'ldiriladi).
   // ------------------------------------------------------------
   bot.on('message', async (msg) => {
     if (!isAdmin(msg.from.id)) return;
-    if (!msg.text || msg.text.startsWith('/')) return;
 
     const state = wizardState.get(msg.chat.id);
     if (!state) return;
+
+    // --- Xabar tarqatish: kontent kutilmoqda ---
+    if (state.mode === 'broadcast_await_content') {
+      wizardState.delete(msg.chat.id);
+      await runBroadcast(bot, msg);
+      return;
+    }
+
+    if (!msg.text || msg.text.startsWith('/')) return;
 
     // --- Tahrirlash oqimi: yangi qiymat kutilmoqda ---
     if (state.mode === 'edit_await_value') {
@@ -275,9 +314,10 @@ function startAdminBot() {
             bio: d.bio,
             photo: d.photo,
             experienceYrs: parseInt(d.experienceYrs, 10) || 0,
-            basePrice: parseInt(d.basePrice, 10) || 0,
+            basePrice: d.basePrice ? parseInt(d.basePrice, 10) : null,
             region: d.region,
             district: d.district,
+            village: d.village,
             skills: d.skills ? d.skills.split(',').map((s) => s.trim()).filter(Boolean) : [],
           });
           bot.sendMessage(msg.chat.id, `✅ Usta qo'shildi: ${d.firstName} (ID: ${master.id.slice(0, 8)})`);
@@ -294,8 +334,57 @@ function startAdminBot() {
   });
 
   // eslint-disable-next-line no-console
-  console.log('[AdminBot] Ishga tushdi, admin buyruqlarini tinglamoqda.');
+  console.log('[Bot] Ishga tushdi (umumiy /start + admin buyruqlari).');
   return bot;
+}
+
+function adminHelpText() {
+  return [
+    'UstaTop Admin Bot',
+    '',
+    "/addmaster — yangi usta qo'shish",
+    "/listmasters — ustalar ro'yxati",
+    '/editmaster <id> — ustani tahrirlash',
+    "/deletemaster <id> — ustani o'chirish",
+    '/toggleonline <id> — onlayn/offlayn almashtirish',
+    '/verify <id> — ustani tasdiqlash',
+    '/broadcast — barcha foydalanuvchilarga xabar yuborish',
+    '/cancel — joriy amalni bekor qilish',
+    '',
+    "ID'larni /listmasters orqali ko'rish mumkin (# belgisidan keyingi qism).",
+  ].join('\n');
+}
+
+/**
+ * Admin yuborgan xabarni (matn/rasm) barcha ro'yxatdan o'tgan
+ * foydalanuvchilarga tarqatadi. Telegram tezlik cheklovidan
+ * (rate limit) chetlanish uchun xabarlar orasida kichik pauza qo'yiladi.
+ */
+async function runBroadcast(bot, adminMsg) {
+  const users = await userRepository.listAllTelegramIds();
+  await bot.sendMessage(adminMsg.chat.id, `Tarqatish boshlandi: ${users.length} ta foydalanuvchi...`);
+
+  let success = 0;
+  let failed = 0;
+
+  for (const user of users) {
+    const chatId = user.telegramId.toString();
+    try {
+      if (adminMsg.photo) {
+        const fileId = adminMsg.photo[adminMsg.photo.length - 1].file_id;
+        await bot.sendPhoto(chatId, fileId, { caption: adminMsg.caption || '' });
+      } else if (adminMsg.text) {
+        await bot.sendMessage(chatId, adminMsg.text);
+      }
+      success += 1;
+    } catch {
+      failed += 1; // Foydalanuvchi botni bloklagan yoki boshqa xato — o'tkazib yuboramiz
+    }
+    // Telegram'ning ~30 xabar/soniya cheklovidan chetlanish uchun kichik pauza
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  }
+
+  bot.sendMessage(adminMsg.chat.id, `Tarqatish yakunlandi.\n✅ Yuborildi: ${success}\n❌ Muvaffaqiyatsiz: ${failed}`);
 }
 
 module.exports = { startAdminBot };
