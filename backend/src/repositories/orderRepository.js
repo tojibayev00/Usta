@@ -30,7 +30,7 @@ const orderRepository = {
   findByCustomer(customerId, { skip, take }) {
     return prisma.order.findMany({
       where: { customerId },
-      include: { master: { include: { user: true, category: true } } },
+      include: { master: { include: { user: true, category: true } }, review: true },
       orderBy: { createdAt: 'desc' },
       skip,
       take,

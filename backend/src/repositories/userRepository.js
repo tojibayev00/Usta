@@ -27,6 +27,15 @@ const userRepository = {
   update(id, data) {
     return prisma.user.update({ where: { id }, data });
   },
+
+  /** Admin bot orqali xabar yuborish (/broadcast) uchun barcha foydalanuvchilar */
+  listAllTelegramIds() {
+    return prisma.user.findMany({ select: { telegramId: true } });
+  },
+
+  count() {
+    return prisma.user.count();
+  },
 };
 
 module.exports = userRepository;

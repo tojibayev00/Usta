@@ -16,12 +16,13 @@ const masterRepository = {
    * Filtr + saralash bilan ustalar ro'yxatini qaytaradi.
    * @param {object} params
    */
-  async findMany({ categoryId, onlineOnly, sort, lat, lng, region, district, skip, take }) {
+  async findMany({ categoryId, onlineOnly, sort, lat, lng, region, district, village, skip, take }) {
     const where = {
       ...(categoryId ? { categoryId } : {}),
       ...(onlineOnly ? { isOnline: true } : {}),
       ...(region ? { region: { contains: region, mode: 'insensitive' } } : {}),
       ...(district ? { district: { contains: district, mode: 'insensitive' } } : {}),
+      ...(village ? { village: { contains: village, mode: 'insensitive' } } : {}),
     };
 
     // Masofa bo'yicha saralash Prisma darajasida mumkin emas (hisoblangan maydon),
@@ -130,6 +131,44 @@ const masterRepository = {
     });
   },
 
+  /**
+   * Web App ichida mijoz o'zi "Usta bo'lish" formasini to'ldirganda
+   * chaqiriladi. Yangi User yaratilmaydi — mavjud foydalanuvchining
+   * roli MASTER'ga o'zgaradi va unga Master profili biriktiriladi.
+   */
+  createForExistingUser(userId, { categoryId, bio, photo, experienceYrs, basePrice, region, district, village, phone, skills }) {
+    return prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { role: 'MASTER', ...(phone ? { phone } : {}) },
+      });
+
+      const master = await tx.master.create({
+        data: {
+          userId,
+          categoryId,
+          bio,
+          photo,
+          experienceYrs,
+          basePrice,
+          region,
+          district,
+          village,
+          isOnline: true,
+          isVerified: false, // admin tasdiqlashi tavsiya etiladi, lekin ro'yxatda ko'rinaveradi
+        },
+      });
+
+      if (skills && skills.length) {
+        await tx.masterSkill.createMany({
+          data: skills.map((label) => ({ masterId: master.id, label })),
+        });
+      }
+
+      return master;
+    });
+  },
+
   async delete(masterId) {
     // Master o'chirilganda bog'liq User'ni o'chirmaymiz (buyurtma tarixi saqlanishi uchun),
     // faqat Master yozuvini olib tashlaymiz. Skills onDelete: Cascade orqali avtomatik ketadi.
@@ -148,7 +187,7 @@ const masterRepository = {
    */
   async updateField(masterId, field, value) {
     const userFields = ['firstName', 'lastName'];
-    const masterFields = ['basePrice', 'experienceYrs', 'bio', 'photo', 'region', 'district', 'categoryId'];
+    const masterFields = ['basePrice', 'experienceYrs', 'bio', 'photo', 'region', 'district', 'village', 'categoryId'];
 
     if (userFields.includes(field)) {
       const master = await prisma.master.findUnique({ where: { id: masterId } });
