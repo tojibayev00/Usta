@@ -147,18 +147,23 @@ async function renderHistory() {
 
     wrap.innerHTML = `<div class="stagger" style="display:flex; flex-direction:column; gap:12px; padding: 0 20px;">
       ${orders.map((o) => `
-        <div class="card history-card" style="display:flex; gap:12px; align-items:center;" onclick="openOrderFromHistory('${o.id}')">
-          <img class="avatar" src="${o.master?.photo || ''}" style="width:52px;height:52px;" />
-          <div style="flex:1; min-width:0;">
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-              <span class="master-name">${o.master?.name || ''}</span>
-              <span class="status-pill ${STATUS_CLASS[o.status] || 'active-p'}">${STATUS_LABEL[o.status] || o.status}</span>
+        <div class="card history-card" style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; gap:12px; align-items:center; cursor:pointer;" onclick="openOrderFromHistory('${o.id}')">
+            <img class="avatar" src="${o.master?.photo || ''}" style="width:52px;height:52px;" />
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                <span class="master-name">${o.master?.name || ''}</span>
+                <span class="status-pill ${STATUS_CLASS[o.status] || 'active-p'}">${STATUS_LABEL[o.status] || o.status}</span>
+              </div>
+              <div class="master-meta">${o.master?.category || ''} · ${formatRelativeDate(o.createdAt)}</div>
             </div>
-            <div class="master-meta">${o.master?.category || ''} · ${formatRelativeDate(o.createdAt)}</div>
+            <div style="text-align:right;">
+              <div style="font-weight:800; font-size:14px;">${formatSum(o.totalPrice)}</div>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-weight:800; font-size:14px;">${formatSum(o.totalPrice)}</div>
-          </div>
+          ${o.status === 'COMPLETED' && !o.hasReview ? `
+            <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="event.stopPropagation(); openReviewSheet('${o.id}')">Ustani baholash</button>
+          ` : ''}
         </div>
       `).join('')}
     </div>`;
@@ -212,8 +217,84 @@ async function renderProfile() {
     // Aniq son kerak bo'lsa backendga alohida /count endpoint qo'shish mumkin;
     // hozircha ro'yxat uzunligini taxminiy ko'rsatamiz.
     document.getElementById('profile-orders-count').textContent = orders.length >= 1 ? orders.length : 0;
+
+    await renderProfileMasterSection(user);
   } catch (err) {
     showToast('Profil ma\'lumotlarini yuklab bo\'lmadi');
+  }
+}
+
+/** Profil sahifasida "Usta bo'lish" tugmasi yoki mavjud usta profili qisqacha ko'rinishi */
+async function renderProfileMasterSection(user) {
+  const wrap = document.getElementById('profile-master-section');
+  if (!wrap) return;
+
+  if (user.role !== 'MASTER') {
+    wrap.innerHTML = `
+      <button class="btn btn-secondary" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="openMasterRegisterScreen()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 10-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.8 2.8-2-2 2.8-2.8z"/></svg>
+        Usta sifatida ro'yxatdan o'tish
+      </button>
+    `;
+    return;
+  }
+
+  try {
+    const master = await Api.masters.mine();
+    wrap.innerHTML = `
+      <div class="list-group">
+        <div class="list-row" onclick="openMasterProfile('${master.id}')">
+          <img class="avatar" src="${master.photo || ''}" style="width:44px;height:44px;" />
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:14.5px;">Mening usta profilim</div>
+            <div class="text-secondary" style="font-size:12.5px;">${master.category ? master.category.name : ''} · ${master.isOnline ? 'Onlayn' : 'Offlayn'}</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="list-row" style="justify-content:space-between;">
+          <span style="font-weight:600; font-size:14px;">Buyurtmalarni qabul qilish (onlayn)</span>
+          <div class="toggle ${master.isOnline ? 'on' : ''}" onclick="toggleMasterOnline(this, '${master.id}')"></div>
+        </div>
+      </div>
+    `;
+  } catch {
+    wrap.innerHTML = '';
+  }
+}
+
+async function toggleMasterOnline(toggleEl, masterId) {
+  const goingOnline = !toggleEl.classList.contains('on');
+  try {
+    await Api.masters.setOnlineStatus(goingOnline);
+    toggleEl.classList.toggle('on');
+    showToast(goingOnline ? "Endi onlaynsiz" : "Endi offlaynsiz");
+  } catch (err) {
+    showToast(err.message || "O'zgartirib bo'lmadi");
+  }
+}
+
+/** "Yordam" tugmasi — to'g'ridan-to'g'ri admin bilan Telegram chatiga ochadi */
+function openHelpChat() {
+  const url = `https://t.me/${ADMIN_CONTACT_USERNAME}`;
+  if (window.Telegram?.WebApp?.openTelegramLink) {
+    window.Telegram.WebApp.openTelegramLink(url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+/** Donat sheet'ini ochish */
+function openDonateSheet() {
+  document.getElementById('donate-card-number').textContent = DONATE_CARD_NUMBER;
+  showSheet('donate-sheet');
+}
+
+function copyDonateCard() {
+  const text = DONATE_CARD_NUMBER.replace(/\s/g, '');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('Nusxalandi!'));
+  } else {
+    showToast(text);
   }
 }
 

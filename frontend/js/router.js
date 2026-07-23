@@ -68,6 +68,7 @@ function updateTabbarState(screenId) {
 
 // Narxni formatlash: 80000 -> "80 000 so'm"
 function formatSum(n) {
+  if (n == null) return "Narx kelishiladi";
   return n.toLocaleString('ru-RU').replace(/,/g, ' ') + " so'm";
 }
 

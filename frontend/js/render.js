@@ -98,6 +98,7 @@ function openCategory(categoryId) {
   App.state.masterListFilter = 'all';
   App.state.regionFilter = null;
   App.state.districtFilter = null;
+  App.state.villageFilter = null;
   document.getElementById('masters-list-title').textContent = categoryName(categoryId);
   App.navigate('screen-masters-list');
   renderMastersList();
@@ -109,6 +110,7 @@ function openAllMasters() {
   App.state.masterListFilter = 'top';
   App.state.regionFilter = null;
   App.state.districtFilter = null;
+  App.state.villageFilter = null;
   document.getElementById('masters-list-title').textContent = 'Eng yaxshi ustalar';
   App.navigate('screen-masters-list');
   document.querySelectorAll('#masters-filter-bar .chip').forEach((c) => c.classList.remove('active'));
@@ -131,6 +133,7 @@ async function renderMastersList() {
 
   if (App.state.regionFilter) params.region = App.state.regionFilter;
   if (App.state.districtFilter) params.district = App.state.districtFilter;
+  if (App.state.villageFilter) params.village = App.state.villageFilter;
 
   if (filter === 'top') params.sort = 'rating';
   if (filter === 'cheap') params.sort = 'price_asc';
@@ -220,31 +223,68 @@ function setMasterFilter(filter, btnEl) {
   renderMastersList();
 }
 
-// --- Viloyat/tuman bo'yicha qidiruv (bottom-sheet) ---------------
+// --- Viloyat/tuman bo'yicha qidiruv (bottom-sheet, kaskadli) -----
 
-const UZ_REGIONS = [
-  "Toshkent shahri", "Toshkent viloyati", "Andijon viloyati", "Farg'ona viloyati",
-  "Namangan viloyati", "Samarqand viloyati", "Buxoro viloyati", "Xorazm viloyati",
-  "Qashqadaryo viloyati", "Surxondaryo viloyati", "Jizzax viloyati", "Sirdaryo viloyati",
-  "Navoiy viloyati", "Qoraqalpog'iston Respublikasi",
-];
-
-function openLocationFilterSheet() {
+async function openLocationFilterSheet() {
   const regionSelect = document.getElementById('location-filter-region');
+  const districtSelect = document.getElementById('location-filter-district');
+
   if (regionSelect.options.length <= 1) {
-    regionSelect.innerHTML = '<option value="">Barcha viloyatlar</option>' +
-      UZ_REGIONS.map((r) => `<option value="${r}">${r}</option>`).join('');
+    try {
+      const regions = await getRegions();
+      regionSelect.innerHTML = '<option value="">Barcha viloyatlar</option>' +
+        regions.map((r) => `<option value="${r}">${r}</option>`).join('');
+    } catch {
+      showToast("Viloyatlarni yuklab bo'lmadi");
+    }
   }
+
   regionSelect.value = App.state.regionFilter || '';
-  document.getElementById('location-filter-district').value = App.state.districtFilter || '';
+  document.getElementById('location-filter-village').value = App.state.villageFilter || '';
+
+  if (App.state.regionFilter) {
+    await onFilterRegionChange(App.state.districtFilter);
+  } else {
+    districtSelect.innerHTML = '<option value="">Avval viloyat tanlang</option>';
+    districtSelect.disabled = true;
+  }
+
   showSheet('location-filter-sheet');
+}
+
+/** Filtr sheetida viloyat tanlanganda tumanlarni yuklaydi */
+async function onFilterRegionChange(preselectDistrict) {
+  const region = document.getElementById('location-filter-region').value;
+  const districtSelect = document.getElementById('location-filter-district');
+
+  if (!region) {
+    districtSelect.innerHTML = '<option value="">Avval viloyat tanlang</option>';
+    districtSelect.disabled = true;
+    return;
+  }
+
+  districtSelect.disabled = true;
+  districtSelect.innerHTML = '<option value="">Yuklanmoqda...</option>';
+
+  try {
+    const districts = await Api.locations.districts(region);
+    districtSelect.innerHTML = '<option value="">Barcha tumanlar</option>' +
+      districts.map((d) => `<option value="${d}">${d}</option>`).join('');
+    districtSelect.disabled = false;
+    if (preselectDistrict) districtSelect.value = preselectDistrict;
+  } catch {
+    districtSelect.innerHTML = '<option value="">Yuklab bo\'lmadi</option>';
+    showToast("Tumanlarni yuklab bo'lmadi");
+  }
 }
 
 function applyLocationFilter() {
   const region = document.getElementById('location-filter-region').value.trim();
   const district = document.getElementById('location-filter-district').value.trim();
+  const village = document.getElementById('location-filter-village').value.trim();
   App.state.regionFilter = region || null;
   App.state.districtFilter = district || null;
+  App.state.villageFilter = village || null;
   hideSheet('location-filter-sheet');
   renderMastersList();
 }
@@ -252,8 +292,11 @@ function applyLocationFilter() {
 function clearLocationFilter() {
   App.state.regionFilter = null;
   App.state.districtFilter = null;
+  App.state.villageFilter = null;
   document.getElementById('location-filter-region').value = '';
-  document.getElementById('location-filter-district').value = '';
+  document.getElementById('location-filter-district').innerHTML = '<option value="">Avval viloyat tanlang</option>';
+  document.getElementById('location-filter-district').disabled = true;
+  document.getElementById('location-filter-village').value = '';
   hideSheet('location-filter-sheet');
   renderMastersList();
 }
@@ -276,6 +319,7 @@ async function openNearbyMasters() {
   App.state.masterListFilter = 'near';
   App.state.regionFilter = null;
   App.state.districtFilter = null;
+  App.state.villageFilter = null;
   document.getElementById('masters-list-title').textContent = 'Eng yaqin ustalar';
   App.navigate('screen-masters-list');
   document.querySelectorAll('#masters-filter-bar .chip').forEach((c) => c.classList.remove('active'));

@@ -18,6 +18,12 @@ const API_BASE_URL = (() => {
   return isLocal ? 'http://localhost:4000/api' : 'https://usta-production.up.railway.app/api';
 })();
 
+// "Yordam" tugmasi shu Telegram profiliga olib boradi (@ belgisisiz)
+const ADMIN_CONTACT_USERNAME = 'tojibayevv';
+
+// Donat/homiylik bo'limida ko'rsatiladigan karta raqami
+const DONATE_CARD_NUMBER = '0000 0000 0000 0000'; // TODO: haqiqiy karta raqamiga almashtiring
+
 const TOKEN_STORAGE_KEY = 'ustatop_token';
 
 const Api = {
@@ -69,14 +75,13 @@ const Api = {
     if (!response.ok || json.success === false) {
       throw new ApiError(json.message || 'Xatolik yuz berdi', response.status, json.code);
     }
+
+    // Ba'zi endpointlar (masalan /masters) sahifalash ma'lumotini
+    // top-level "pagination" sifatida qaytaradi. Bunday holatlarda
+    // frontend { items, pagination } shaklini kutadi.
     if (json.pagination) {
       return { items: json.data, pagination: json.pagination };
     }
-
-    return json.data;
-  },
-
-  get(path, opts) {
 
     return json.data;
   },
@@ -118,7 +123,7 @@ const Api = {
   },
 
   masters: {
-    /** @param {{categoryId?, categorySlug?, sort?, onlineOnly?, lat?, lng?, page?, pageSize?}} params */
+    /** @param {{categoryId?, categorySlug?, sort?, onlineOnly?, region?, district?, village?, lat?, lng?, page?, pageSize?}} params */
     list(params = {}) {
       const qs = new URLSearchParams(
         Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
@@ -130,6 +135,23 @@ const Api = {
     },
     setOnlineStatus(isOnline) {
       return Api.patch('/masters/me/online', { isOnline });
+    },
+    /** Mijoz "Usta bo'lish" formasini to'ldirganda chaqiriladi */
+    register(payload) {
+      return Api.post('/masters/register', payload);
+    },
+    /** Ustaning o'zi — o'z profilini olish */
+    mine() {
+      return Api.get('/masters/mine');
+    },
+  },
+
+  locations: {
+    regions() {
+      return Api.get('/locations/regions', { auth: false });
+    },
+    districts(region) {
+      return Api.get(`/locations/districts?region=${encodeURIComponent(region)}`, { auth: false });
     },
   },
 

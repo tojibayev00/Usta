@@ -71,8 +71,6 @@ function goToOrderConfirm() {
 // 6) BUYURTMANI TASDIQLASH
 // ---------------------------------------------------------------
 
-const SERVICE_FEE = 5000;
-
 function renderOrderConfirm() {
   const m = App.state.masterCache; // usta profilidan keshlangan
   const root = document.getElementById('order-confirm-content');
@@ -86,7 +84,7 @@ function renderOrderConfirm() {
           <div class="master-name">${m.name}</div>
           <div class="master-meta">${m.category ? m.category.name : ''}</div>
         </div>
-        <span class="master-price">${formatSum(m.price)}</span>
+        ${m.price != null ? `<span class="master-price">${formatSum(m.price)}</span>` : ''}
       </div>
     </div>
 
@@ -113,18 +111,11 @@ function renderOrderConfirm() {
       <textarea id="order-note" class="input-field" rows="3" placeholder="Muammo haqida qisqacha yozing (ixtiyoriy)" style="resize:none;"></textarea>
     </div>
 
-    <div class="list-group" style="margin: 0 20px 16px;">
-      <div class="list-row" style="justify-content:space-between;">
-        <span class="text-secondary" style="font-size:14px;">Xizmat narxi</span>
-        <span style="font-weight:600;">${formatSum(m.price)}</span>
-      </div>
-      <div class="list-row" style="justify-content:space-between;">
-        <span class="text-secondary" style="font-size:14px;">Xizmat haqi</span>
-        <span style="font-weight:600;">${formatSum(SERVICE_FEE)}</span>
-      </div>
-      <div class="list-row" style="justify-content:space-between;">
-        <span style="font-weight:700;">Jami</span>
-        <span style="font-weight:800; color:var(--color-primary); font-size:16px;">${formatSum(m.price + SERVICE_FEE)}</span>
+    <div class="card" style="margin: 0 20px 16px; display:flex; gap:10px; align-items:flex-start;">
+      <div style="color:var(--color-primary); flex-shrink:0; margin-top:1px;">${icon('help')}</div>
+      <div class="text-secondary" style="font-size:13px; line-height:1.5;">
+        Narx haqida: yakuniy summa ish hajmiga qarab usta bilan to'g'ridan-to'g'ri kelishiladi.
+        ${m.price != null ? `Ko'rsatilgan ${formatSum(m.price)} — taxminiy boshlang'ich narx.` : ''}
       </div>
     </div>
   `;
