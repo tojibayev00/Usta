@@ -269,6 +269,7 @@
       </div>
 
       <div style="padding: 20px; display:none;" id="status-done-cta">
+        <button class="btn btn-secondary" style="margin-bottom:10px;" onclick="openReviewSheet(App.state.currentOrderId)">Ustani baholash</button>
         <button class="btn btn-primary" onclick="finishOrderDemo()">Bosh sahifaga qaytish</button>
       </div>
     </div>
@@ -368,7 +369,7 @@
             <span style="flex:1; font-weight:600; font-size:14.5px;">Sozlamalar</span>
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </div>
-          <div class="list-row" onclick="showToast('Yordam: @ustatop_support ga yozing')">
+          <div class="list-row" onclick="openHelpChat()">
             <div class="settings-icon-wrap" style="background:#EEF0F4; color:var(--color-text-secondary);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.5 2-2.5 3.5"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/></svg>
             </div>
@@ -378,8 +379,23 @@
         </div>
       </div>
 
+      <!-- Usta bo'lish / usta profili -->
+      <div style="padding: 0 20px 16px;" id="profile-master-section"></div>
+
+      <div style="padding: 0 20px 16px;">
+        <div class="list-group">
+          <div class="list-row" onclick="openDonateSheet()">
+            <div class="settings-icon-wrap" style="background:rgba(255,159,10,0.12); color:var(--color-warning);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-4-8-7.5-8-11.5A5.5 5.5 0 0112 5.5a5.5 5.5 0 018 4c0 4-4 7.5-8 11.5z"/></svg>
+            </div>
+            <span style="flex:1; font-weight:600; font-size:14.5px;">Botni qo'llab-quvvatlash</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+
       <div style="padding: 0 20px 20px;">
-        <button class="btn btn-danger-ghost" onclick="showToast('Tizimdan chiqish')">
+        <button class="btn btn-danger-ghost" onclick="showToast('Tizimdan chiqish uchun Telegram sozlamalaridan foydalaning')">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
           Tizimdan chiqish
         </button>
@@ -403,6 +419,92 @@
         <span>Profil</span>
       </button>
     </nav>
+  </section>
+
+  <!-- ======================================================
+       USTA SIFATIDA RO'YXATDAN O'TISH
+  ======================================================= -->
+  <section id="screen-master-register" class="screen">
+    <div class="navbar">
+      <button class="nav-icon-btn" onclick="App.back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="navbar-title">Usta sifatida ro'yxatdan o'tish</span>
+      <div style="width:36px;"></div>
+    </div>
+    <div class="screen-content no-tabbar" style="padding-bottom:100px;">
+      <div style="padding: 4px 20px 16px;">
+        <p class="text-secondary" style="font-size:13.5px; line-height:1.5; margin:0;">
+          Ma'lumotlaringizni to'ldiring — mijozlar sizni kategoriya va manzil bo'yicha qidirishganda topa oladi.
+        </p>
+      </div>
+
+      <div style="padding: 0 20px 14px;">
+        <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Kasbiy yo'nalish *</label>
+        <select id="mr-category" class="input-field">
+          <option value="">Tanlang...</option>
+        </select>
+      </div>
+
+      <div style="padding: 0 20px 14px;">
+        <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Telefon raqami *</label>
+        <div class="phone-input-row">
+          <span class="phone-prefix">+998</span>
+          <input id="mr-phone" type="tel" inputmode="numeric" placeholder="90 123 45 67" />
+        </div>
+      </div>
+
+      <div style="padding: 0 20px 14px; display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Viloyat *</label>
+          <select id="mr-region" class="input-field" onchange="onRegisterRegionChange()">
+            <option value="">Tanlang...</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Tuman *</label>
+          <select id="mr-district" class="input-field" disabled>
+            <option value="">Avval viloyat</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="padding: 0 20px 14px;">
+        <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Qishloq / mahalla (ixtiyoriy)</label>
+        <input id="mr-village" class="input-field" placeholder="Masalan: Testepi MFY" />
+      </div>
+
+      <div style="padding: 0 20px 14px; display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Tajriba (yil)</label>
+          <input id="mr-experience" class="input-field" type="number" inputmode="numeric" placeholder="5" min="0" />
+        </div>
+        <div style="flex:1;">
+          <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Taxminiy narx (ixtiyoriy)</label>
+          <input id="mr-price" class="input-field" type="number" inputmode="numeric" placeholder="80000" min="0" />
+        </div>
+      </div>
+
+      <div style="padding: 0 20px 14px;">
+        <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Ko'nikmalar (vergul bilan)</label>
+        <input id="mr-skills" class="input-field" placeholder="Quvur ta'mirlash, Isitish tizimi" />
+      </div>
+
+      <div style="padding: 0 20px 14px;">
+        <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Qisqacha ma'lumot (bio)</label>
+        <textarea id="mr-bio" class="input-field" rows="3" placeholder="O'zingiz va tajribangiz haqida qisqacha yozing" style="resize:none;"></textarea>
+      </div>
+
+      <div style="padding: 0 20px 14px;">
+        <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Rasm havolasi (ixtiyoriy)</label>
+        <input id="mr-photo" class="input-field" placeholder="https://..." />
+        <p class="text-tertiary" style="font-size:11.5px; margin:6px 0 0;">Rasmni biror bepul xosting (masalan Telegraph, Imgur)ga yuklab, havolasini shu yerga qo'ying.</p>
+      </div>
+
+      <div style="padding: 4px 20px 0;">
+        <button class="btn btn-primary" onclick="submitMasterRegistration()">Ro'yxatdan o'tish</button>
+      </div>
+    </div>
   </section>
 
   <!-- ======================================================
@@ -505,13 +607,19 @@
     <h3 style="font-size:17px; font-weight:700; margin:0 0 14px;">Manzil bo'yicha qidirish</h3>
     <div style="margin-bottom:12px;">
       <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Viloyat</label>
-      <select id="location-filter-region" class="input-field">
+      <select id="location-filter-region" class="input-field" onchange="onFilterRegionChange()">
         <option value="">Barcha viloyatlar</option>
       </select>
     </div>
+    <div style="margin-bottom:12px;">
+      <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Tuman</label>
+      <select id="location-filter-district" class="input-field" disabled>
+        <option value="">Avval viloyat tanlang</option>
+      </select>
+    </div>
     <div style="margin-bottom:18px;">
-      <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Tuman / shahar</label>
-      <input id="location-filter-district" class="input-field" placeholder="Masalan: Chilonzor tumani" />
+      <label class="text-secondary" style="font-size:12.5px; display:block; margin-bottom:6px;">Qishloq / mahalla (ixtiyoriy)</label>
+      <input id="location-filter-village" class="input-field" placeholder="Masalan: Testepi MFY" />
     </div>
     <button class="btn btn-primary" onclick="applyLocationFilter()">Qidirish</button>
     <button class="btn btn-ghost" style="margin-top:8px;" onclick="clearLocationFilter()">Filtrni tozalash</button>
@@ -530,6 +638,32 @@
     <button class="btn btn-primary" onclick="saveProfilePhone()">Saqlash</button>
   </div>
 
+  <!-- ======================================================
+       GLOBAL: Botni qo'llab-quvvatlash (donat, bottom-sheet)
+  ======================================================= -->
+  <div class="bottom-sheet" id="donate-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3 style="font-size:17px; font-weight:700; margin:0 0 8px;">Botni qo'llab-quvvatlash</h3>
+    <p class="text-secondary" style="font-size:13.5px; line-height:1.5; margin:0 0 16px;">
+      UstaTop bepul va reklamasiz ishlashi uchun homiylik qilishingiz mumkin. Rahmat! 🙏
+    </p>
+    <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <span id="donate-card-number" style="font-weight:700; font-size:17px; letter-spacing:0.02em;"></span>
+      <button class="btn btn-secondary btn-sm" onclick="copyDonateCard()">Nusxalash</button>
+    </div>
+  </div>
+
+  <!-- ======================================================
+       GLOBAL: Ustaga sharh qoldirish (bottom-sheet)
+  ======================================================= -->
+  <div class="bottom-sheet" id="review-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3 style="font-size:17px; font-weight:700; margin:0 0 14px;">Ustani baholang</h3>
+    <div id="review-star-picker" style="display:flex; justify-content:center; gap:8px; margin-bottom:18px;"></div>
+    <textarea id="review-text-input" class="input-field" rows="3" placeholder="Sharh yozing (ixtiyoriy)" style="resize:none; margin-bottom:14px;"></textarea>
+    <button class="btn btn-primary" onclick="submitReview()">Yuborish</button>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="global-toast">
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
@@ -544,6 +678,8 @@
 <script src="js/render.js"></script>
 <script src="js/orderFlow.js"></script>
 <script src="js/tracking.js"></script>
+<script src="js/masterRegister.js"></script>
+<script src="js/reviews.js"></script>
 <script src="js/auth.js"></script>
 <script>
   // Telegram Web App bilan integratsiya (agar Telegram ichida ochilsa)
