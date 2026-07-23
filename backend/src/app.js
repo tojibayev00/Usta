@@ -46,9 +46,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Brauzer fetch() so'rovlaridan oldin avtomatik yuboriladigan OPTIONS
-// (CORS preflight) so'rovlarini aniq qayta ishlaymiz.
+// (CORS preflight) so'rovlarini aniq qayta ishlaymiz. Ba'zi hosting
+// platformalari (proxy/edge qatlami) buni avtomatik ushlab qolmasligi
+// mumkin, shuning uchun har bir yo'l uchun aniq belgilaymiz.
 app.options('*', cors(corsOptions));
-
 
 // --- Body parser ---
 app.use(express.json({ limit: '1mb' }));
