@@ -42,7 +42,12 @@ const config = {
   telegram: {
     botToken: process.env.TELEGRAM_BOT_TOKEN,
     adminId: process.env.ADMIN_TELEGRAM_ID || null,
+    // Foydalanuvchilar "Yordam" tugmasi orqali murojaat qiladigan username (@ belgisisiz)
+    adminContactUsername: process.env.ADMIN_CONTACT_USERNAME || null,
   },
+
+  // Web App joylashgan manzil — /start buyrug'ida "Ilovani ochish" tugmasi uchun
+  frontendUrl: process.env.FRONTEND_URL || null,
 
   cors: {
     origins: (process.env.CORS_ORIGIN || '')
