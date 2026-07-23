@@ -71,9 +71,10 @@ model Master {
   bio           String?
   photo         String?
   experienceYrs Int      @default(0) @map("experience_years")
-  basePrice     Int      @map("base_price") // so'mda, butun son
+  basePrice     Int?     @map("base_price") // taxminiy/boshlang'ich narx (so'mda) — yakuniy narx mijoz va usta o'rtasida kelishiladi
   region        String?  // Viloyat (masalan "Toshkent shahri", "Samarqand viloyati")
   district      String?  // Tuman/shahar (masalan "Chilonzor tumani")
+  village       String?  // Qishloq/mahalla (ixtiyoriy, erkin matn)
   latitude      Float?
   longitude     Float?
   isOnline      Boolean  @default(false) @map("is_online")
@@ -134,9 +135,9 @@ model Order {
   addressId    String?      @map("address_id")
   scheduledAt  DateTime     @map("scheduled_at")
   note         String?
-  servicePrice Int          @map("service_price")
-  serviceFee   Int          @default(5000) @map("service_fee")
-  totalPrice   Int          @map("total_price")
+  servicePrice Int?         @map("service_price") // ustaning taxminiy narxi (agar ko'rsatgan bo'lsa)
+  serviceFee   Int          @default(0) @map("service_fee") // hozircha ishlatilmaydi, narx to'g'ridan-to'g'ri kelishiladi
+  totalPrice   Int?         @map("total_price")
   status       OrderStatus  @default(PENDING)
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
