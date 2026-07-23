@@ -23,6 +23,16 @@ const masterController = {
     const master = await masterService.setOnlineStatus(req.user.id, Boolean(isOnline));
     res.status(200).json({ success: true, data: master });
   }),
+
+  registerSelf: catchAsync(async (req, res) => {
+    const master = await masterService.registerSelf(req.user.id, req.body);
+    res.status(201).json({ success: true, data: master });
+  }),
+
+  getMine: catchAsync(async (req, res) => {
+    const master = await masterService.getMine(req.user.id);
+    res.status(200).json({ success: true, data: master });
+  }),
 };
 
 module.exports = masterController;
